@@ -1,0 +1,122 @@
+flowchart TB
+
+%%================ CLIENT ======================
+subgraph CLIENT["🌐 Client Layer"]
+    A["Web / Mobile / Partner API"]
+end
+
+%%================ GATEWAY ======================
+subgraph GATEWAY["🚪 API Gateway"]
+    B["Routing<br/>SSL Termination<br/>Rate Limiting<br/>API Versioning"]
+end
+
+%%================ SECURITY ======================
+subgraph SECURITY["🔐 Security Layer"]
+    C["Authentication<br/>JWT / OAuth2"]
+    D["Authorization<br/>RBAC / ABAC"]
+end
+
+%%================ VALIDATION ======================
+subgraph VALIDATION["✅ Validation Layer"]
+    E["Header Validation<br/>Authorization<br/>Content-Type<br/>Accept<br/>If-Match<br/>Idempotency-Key<br/>Correlation-ID"]
+
+    F["Query Parameter Validation<br/>page<br/>size<br/>sort<br/>filters"]
+
+    G["Request Body Validation<br/>Schema<br/>Mandatory Fields<br/>Enums<br/>Business Rules"]
+end
+
+%%================ BUSINESS ======================
+subgraph BUSINESS["⚙️ Business Layer"]
+    H["Business Validation<br/>Resource Exists?<br/>Duplicate?<br/>State Transition?"]
+
+    I["Optimistic Locking<br/>ETag / If-Match"]
+
+    J["Business Logic"]
+end
+
+%%================ CACHE ======================
+subgraph CACHE["⚡ Cache Layer"]
+    K["Redis / Memory Cache"]
+end
+
+%%================ DATABASE ======================
+subgraph DATABASE["🗄️ Persistence Layer"]
+    L["Database Transaction<br/>Insert / Update / Delete"]
+
+    M["Primary Database"]
+
+    N["Read Replica"]
+end
+
+%%================ EXTERNAL ======================
+subgraph EXTERNAL["☁️ External Systems"]
+    O["Payment Gateway"]
+    P["Notification Service"]
+    Q["Kafka / Event Bus"]
+end
+
+%%================ RESPONSE ======================
+subgraph RESPONSE["📤 Response"]
+    R["HTTP Response"]
+end
+
+%%================ FLOW ======================
+
+A --> B
+
+B --> C
+
+C -->|401| R
+
+C --> D
+
+D -->|403| R
+
+D --> E
+
+E -->|400 / 412 / 415 / 428| R
+
+E --> F
+
+F -->|400| R
+
+F --> G
+
+G -->|400 / 422| R
+
+G --> H
+
+H -->|404 / 409| R
+
+H --> I
+
+I -->|412| R
+
+I --> J
+
+J --> K
+
+K -->|Cache Hit| R
+
+K -->|Cache Miss| L
+
+J --> O
+
+J --> P
+
+J --> Q
+
+L --> M
+
+M --> N
+
+M -->|500| R
+
+O -->|502 / 503 / 504| R
+
+M --> R
+
+R -->|200| A
+R -->|201| A
+R -->|202| A
+R -->|204| A
